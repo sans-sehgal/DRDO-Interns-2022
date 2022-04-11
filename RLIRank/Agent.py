@@ -98,8 +98,8 @@ class Agent:
 
     def __init__(self, actor_lr, critic_lr, input_dims, gamma=1):
         self.gamma = gamma
-        self.actor = Actor(input_dims*2, 1).to(device)
-        self.critic = Critic(input_dims*2).to(device)
+        self.actor = Actor(input_dims, 1).to(device)
+        self.critic = Critic(input_dims).to(device)
 
         # Initializing the learning rates of actor and critic
         self.adam_actor = torch.optim.Adam(self.actor.parameters(), lr=actor_lr)
@@ -126,7 +126,7 @@ class Agent:
             #print(i.size())
             #i=torch.unsqueeze(i,0)
             #i=torch.unsqueeze(i,0)
-            i=torch.reshape(i,(1,1,92))
+            i=torch.reshape(i,(1,1,46))
             i=i.repeat(state.size()[0],1,1)
             state = torch.cat((state,i),1)
         return state
