@@ -56,10 +56,11 @@ def feedback(Q,action_list,action_list2,data,iter):
         f[int(i)]=1
         #print(Q,action_list[int(i)])
         similarity_list = similarity_score(action_list2,action_list2[int(i)])
-        data.updateRelevance(Q,action_list[int(i)])
+        for s in range(len(action_list)):
+            data.updateRelevance(Q,action_list[int(s)],similarity_list[int(s)])
 
-    #print(data.QUERY_DOC_TRUTH[Q])
-    
+    print(data.QUERY_DOC_TRUTH[Q])
+    #print(similarity_list)
     #print(data.MAX_DCG[Q])
     data.updateIDCG(Q)
     #print(data.MAX_DCG[Q])

@@ -39,12 +39,16 @@ class Dataset:
         self.QUERY_VEC[Q]=modified
         #print(self.QUERY_VEC)
 
-    def updateRelevance(self,Q,doc):
+    def updateRelevance(self,Q,doc,SS):
         #self.QUERY_DOC_TRUTH[Q][doc] = self.QUERY_DOC_TRUTH[Q][doc]+5
+        '''
         if self.QUERY_DOC_TRUTH[Q][doc] == 0:
             self.QUERY_DOC_TRUTH[Q][doc] = 2
         else:
             self.QUERY_DOC_TRUTH[Q][doc]+=2.0/(self.QUERY_DOC_TRUTH[Q][doc])
+        '''
+        self.QUERY_DOC_TRUTH[Q][doc]+=SS
+
 
     def updateIDCG(self,Q):
         self.MAX_DCG = RecalculateIDCG(Q,self.QUERY_DOC_TRUTH,self.MAX_DCG)
