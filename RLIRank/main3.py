@@ -50,8 +50,8 @@ def feedback(Q,action_list,action_list2,data,iter):
     val = input("Enter Feedback \n")
     f = [0]*len(action_list)
     
-    positive=np.zeros(46,dtype=float)
-    negative=np.zeros(46,dtype=float)
+    #positive=np.zeros(46,dtype=float)
+    #negative=np.zeros(46,dtype=float)
     for i in val.split():
         f[int(i)]=1
         #print(Q,action_list[int(i)])
