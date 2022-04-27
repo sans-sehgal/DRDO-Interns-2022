@@ -1,4 +1,4 @@
-### Runs RLIRank on MQ2007/MQ2008 using given hyperparameters
+### Runs RLIRank on MQ2008 using given hyperparameters
 
 ---
 
@@ -9,8 +9,7 @@ To run the algorithm, enter the following code:<br>
 
 <br>Example: 
 ---
-1. Running on given hyperparameters: <br> `$ python main3.py -d ./Data/MQ2008/all_0,1,2 -nf 46 -lr_actor 0.0001 -lr_critic 0.0002 -g 1 -e 50 -episode_length 30 -seed 3 `
-2. Running on given hyperparameters: <br> `$ python main3.py -d ./Data/MQ2007/all_0,1,2 -nf 46 -lr_actor 0.0001 -lr_critic 0.0002 -g 1 -e 50 -episode_length 20 -seed 3 `
+1. Running on given hyperparameters: <br> `$ python main3.py -d ./Data/MQ2008/all_0,1,2 -nf 46 -lr_actor 0.001 -lr_critic 0.002 -g 1 -e 50`
 ---
 
 ## RLIRANK Paper
