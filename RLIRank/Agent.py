@@ -33,7 +33,7 @@ class Actor(nn.Module):
         self.lstm1 = nn.LSTM(state_dim,128,batch_first=True)
         #self.lstm2 = nn.LSTM(128,32)
         #self.lstm3 = nn.LSTM(32,8)
-        self.linear1 = nn.Linear(128, 64)
+        self.linear1 = nn.Linear(128, 8)
         self.linear2 = nn.Linear(64, 16)
         self.linear3 = nn.Linear(256, 128)
         self.linear4 = nn.Linear(128, 16)
@@ -46,8 +46,8 @@ class Actor(nn.Module):
         #X =self.lstm2(X)
         out,(hidden,_) =self.lstm1(X)
         out = self.linear1(hidden[-1])
-        out=self.linear2(out)
-        out=self.linear3(out)
+        #out=self.linear2(out)
+        #out=self.linear3(out)
         out=self.linear6(out)
         #out=self.linear(out)
         #out = self.linear2(out)
@@ -72,11 +72,11 @@ class Critic(nn.Module):
             nn.Linear(32, 1)
         )
         self.lstm1 = nn.LSTM(state_dim,128,batch_first=True)
-        self.lstm2 = nn.LSTM(128,32)
-        self.lstm3 = nn.LSTM(32,8)
-        self.linear1 = nn.Linear(128, 64)
-        self.linear2 = nn.Linear(64,16)
-        self.linear3 = nn.Linear(16, 8)
+        #self.lstm2 = nn.LSTM(128,32)
+        #self.lstm3 = nn.LSTM(32,8)
+        self.linear1 = nn.Linear(128, 8)
+        #self.linear2 = nn.Linear(32,8)
+        #self.linear3 = nn.Linear(16, 8)
         self.linear6 = nn.Linear(8, 1)
 
     
@@ -85,8 +85,8 @@ class Critic(nn.Module):
         #X =self.lstm2(X)
         out,(hidden,_) =self.lstm1(X)
         out = self.linear1(hidden[-1])
-        out = self.linear2(out)
-        out = self.linear3(out)
+        #out = self.linear2(out)
+        #out = self.linear3(out)
         out = self.linear6(out)
         #out = self.linear(out)
         return out
@@ -98,8 +98,8 @@ class Agent:
 
     def __init__(self, actor_lr, critic_lr, input_dims, gamma=1):
         self.gamma = gamma
-        self.actor = Actor(input_dims, 1).to(device)
-        self.critic = Critic(input_dims).to(device)
+        self.actor = Actor(input_dims*2, 1).to(device)
+        self.critic = Critic(input_dims*2).to(device)
 
         # Initializing the learning rates of actor and critic
         self.adam_actor = torch.optim.Adam(self.actor.parameters(), lr=actor_lr)
@@ -126,7 +126,7 @@ class Agent:
             #print(i.size())
             #i=torch.unsqueeze(i,0)
             #i=torch.unsqueeze(i,0)
-            i=torch.reshape(i,(1,1,46))
+            i=torch.reshape(i,(1,1,92))
             i=i.repeat(state.size()[0],1,1)
             state = torch.cat((state,i),1)
         return state

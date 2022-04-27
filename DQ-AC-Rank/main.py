@@ -10,7 +10,35 @@ import os
 import pickle
 from Utils_DQN import *
 import argparse
-import scipy 
+import scipy
+
+def similarity_score(doc_list, q_vec):
+    similarity_score = []
+    for action in doc_list:
+        #action = action[:46]
+        try:
+            cos_distance = scipy.spatial.distance.cosine(q_vec, action)
+            cos_similarity = 1 - cos_distance
+            similarity_score.append(cos_similarity)
+        except:
+            print("skipped")
+            continue
+    return similarity_score
+
+def feedback(Q,action_list,data):
+    for i,j in enumerate(action_list):
+        print(i,'\t',j)
+    
+    val = input("Enter Feedback \n")
+    f = [0]*len(action_list)
+
+    for i in val.split():
+        f[int(i)]=1
+        data.updateRelevance(Q,action_list[int(i)],int(i)+1)        
+
+    data.updateIDCG(Q)
+    return int(val)+1
+
 
 def pickle_data(data, output_file):
     """Pickles given data object into an outfile"""
@@ -37,52 +65,6 @@ def get_name(datadir):
         exit()
     else:
         return ds
-'''
-Q-> current qurey
-action_list -> list of documets
-action_list2 ->feature vectors of the docs in action_list & query 
-data -> dataset (refer to LoadData for format) 
-'''
-
-'''
-Returns a list of similarity scores with the vector received from user feedback
-similarity_score[] -> list of similarity scores
-'''
-def similarity_score(action_list2, data_vec):
-    similarity_score = []
-    for action in action_list2:
-        action = action[:46]
-        try:
-            cos_distance = scipy.spatial.distance.cosine(data_vec, action)
-            cos_similarity = 1 - cos_distance
-            similarity_score.append(cos_similarity)
-        except:
-            print("skipped")
-            continue
-    return similarity_score
-
-def feedback(Q,action_list,action_list2,data,iter):
-    for i,j in enumerate(action_list):
-        print(i,'\t',j)
-    
-    val = input("Enter Feedback \n")
-    f = [0]*len(action_list)
-
-    for i in val.split():
-        f[int(i)]=1
-        #print(Q,action_list[int(i)])
-        similarity_list = similarity_score(action_list2,action_list2[int(i)])
-        print(similarity_list)
-        for s in range(len(action_list)):
-            #print(similarity_list[int(s)])
-            data.updateRelevance(Q,action_list[int(s)],similarity_list[int(s)])
-            #print("")
-
-    print(data.QUERY_DOC_TRUTH[Q])
-    #print(similarity_list)
-    #print(data.MAX_DCG[Q])
-    data.updateIDCG(Q)
-    #print(data.MAX_DCG[Q])
 
 def test_train(model, data):
     """Testing model performance on train set"""
@@ -158,7 +140,6 @@ def test(model, data):
         done = False
         state = data.getDocQuery()[Q]
         action_list = []
-        action_list2=[]
         M=len(state)
 
         for t in range(0,len(state)):
@@ -173,8 +154,7 @@ def test(model, data):
             
             #Monitor actions to evaluate training
             action_list.append(state[action])
-            action_list2.append(np.array(data.getFeatures()[state[action]], dtype=float).reshape(1,46))
-            
+
             #Update to next state,observation and get reward
             state_, reward = update_state(t, Q, state[action], state, data.getTruth())
             observation_ = [data.getFeatures()[x] for x in state_]
@@ -207,6 +187,16 @@ def test(model, data):
 
     return final_result, np.array(score_history).mean()
 
+def get_state(ss,rs):
+    ss2=ss.copy()
+    rs2=rs.copy()
+    ss2.reverse()
+    rs2.reverse()
+    state=np.array([ss2[0],rs2[0]])
+    for i in range(1,len(ss2)):
+        state=np.vstack((np.array([ss2[i],rs2[i]]),state))
+    #print(state.shape)
+    return state
 
 if __name__ == '__main__':
 
@@ -214,8 +204,8 @@ if __name__ == '__main__':
     ap.add_argument("-d","--data",required=True,help="Relative or absolute directory of the folder where data dictionary exists.")
     ap.add_argument("-e","--epochs",required=True,help="Number of epochs")
     ap.add_argument("-nf", "--features_no", required=True,help="Number of features in the dataset")
-    ap.add_argument("-lr_critic", "--learning_rate_critic", required=False,default=0.0002,help="learning rate for dqn")
-    ap.add_argument("-lr_actor", "--learning_rate_actor", required=False,default=0.0001,help="learning rate for actor")
+    ap.add_argument("-lr_critic", "--learning_rate_critic", required=False,default=0.0005,help="learning rate for dqn")
+    ap.add_argument("-lr_actor", "--learning_rate_actor", required=False,default=0.0005,help="learning rate for actor")
     ap.add_argument("-g", "--gamma", required=False,default=1,help="gamma value")
     ap.add_argument("-episode_length", "--episode_length", required=False,default=20,help="Episode length to consider")
     ap.add_argument("-seed", "--seed", required=False,default=3,help="seed for initialization")
@@ -246,6 +236,23 @@ if __name__ == '__main__':
     data_dir=str(args["data"])
     seed=int(args['seed'])
 
+    # #HyperParameters
+    # lr=0.00005
+    # gamma=1
+    # epsilon=1.0
+    # eps_end=0.03
+    # eps_dec = 0.00005
+    # batch_size=128
+    # max_mem_size=50000
+    # replace_target = 2000
+    # hnodes=32
+    # n_features=46
+
+    # n_iterations=150
+    # t_steps=50
+    # data_dir="/home/siva/Desktop/Project_Work/MDPRank/LTR-MDPRank/Data/MQ2008_All_DIC_0,1,2"
+    # seed=3
+
     #Load the data object 
     data = Dataset(data_dir)
 
@@ -270,7 +277,6 @@ if __name__ == '__main__':
     final_result,avgr=test(agent, data)
     results['test'].append((final_result[0],final_result[2],final_result[4],final_result[9],round(avgr, 4)))
     '''
-    #Begin training process for given no. of iterations
     for i in range(n_iterations):
 
         print(f"\n------Epoch {i+1}------------\n")
@@ -287,66 +293,59 @@ if __name__ == '__main__':
         bar = Bar('Training', max=len(train_queries))
 
         for Q in train_queries:
+            ep_reward = 0
+            done = False
+            qvec = data.getQVEC(Q)
+            state = data.getDocQuery()[Q]
 
-            for iter in range(1):
-                ep_reward = 0
-                done = False
-                state = data.getDocQuery()[Q]
-                action_list = []
-                effective_length=min(t_steps,len(state))
-                action_list2=[]
-                for t in range(0,effective_length):
-                    #Get the current observation
-                    observation = [data.getFeatures()[x] for x in state]
-                    observation = torch.FloatTensor(np.array(observation,dtype=float))
+            docs = data.getDocQuery()[Q]
+            docs_list = [data.getFeatures()[x] for x in state]
+            docs_list = torch.FloatTensor(np.array(docs_list,dtype=float))
+            ss=similarity_score(docs_list,qvec)
 
+            rs=data.getRelevance(Q,docs)
+            #rs=[(x+1)*10 for x in rs]
 
-                    #Choose action based on the current observation
-                    #Using the e-greedy dqn policy
-                    action = agent.choose_action_dqn(observation)
-                    #Using actors policy
-                    #action = agent.choose_action_actor(observation)
+            state = get_state(ss,rs)          
 
-                    
-                    #Monitor actions to evaluate training
-                    action_list.append(state[action])
-                    action_list2.append(np.array(data.getFeatures()[state[action]], dtype=float).reshape(1,46))
-                    #Update to next state,observation and get reward
-                    state_, reward = update_state(t, Q, state[action], state, data.getTruth())
-                    observation_ = [data.getFeatures()[x] for x in state_]
-                    observation_ = torch.FloatTensor(np.array(observation_,dtype=float))
-                    
-                    ep_reward += reward
-                    
-                    if(len(state_)==0):
-                        done=True
+            action_list = []
+            effective_length=min(t_steps,len(state))
+            print('NEW QUERY \n')
+            for i in range(2):
 
-                    #Store transition in the buffer
-                    agent.store_transition(observation, action, reward, 
-                                            observation_, done)
+                observation = torch.FloatTensor(np.array(state,dtype=float))
+                action = agent.choose_action_dqn(observation)
+                #print(action)
+                ##feedback
+                action_list=[]
+                action2=action.copy()
+                docs=[x for i,x in sorted(zip(action2,docs))]
+                docs.reverse()
 
-                    # #Learn
-                    # agent.learn()
-                    
-                    #Change the state
-                    state = state_
-                    
-                    if(done):
-                        break
+                #pos = feedback(Q,docs,data)
+                pos=i+1
 
+                reward=1/(pos)
+                ep_reward+=reward
+                rs=data.getRelevance(Q,docs)
 
+                ss=[x for i,x in sorted(zip(action2,ss))]
+                ss.reverse()
 
-                #print(action_list2)
-                #feedback(Q,action_list,action_list2,data,iter)
+                state_ = get_state(ss,rs)
 
-                #Sample a mini batch and learn
-                critic_loss=agent.learn()
+                observation_ = torch.FloatTensor(np.array(state_,dtype=float))
 
-                #Monitor the critic loss
-                # if(critic_loss!=None):
-                #     results['critic_loss'].append(critic_loss)
+                agent.store_transition(observation, np.argmax(action), reward, observation_, done)
 
-                score_history.append(ep_reward/effective_length)
+                state=state_
+
+                #agent.learn()
+            
+            #Update parameters based on the mini-batch
+            agent.learn()
+
+            score_history.append(ep_reward/effective_length)
 
             # Update Query DCG results:
             dcg_results[Q] = validate_individual(data.getTruth()[Q], data.getIDCG()[Q], action_list)
@@ -354,6 +353,8 @@ if __name__ == '__main__':
 
             bar.next()
 
+        # #Update parameters based on the mini-batch
+        # agent.learn()
 
         bar.finish()
         #Current training results
@@ -371,11 +372,11 @@ if __name__ == '__main__':
 
     #Saving results for visualization and analysis
     ds=get_name(data_dir)
-    fpath=f"./Results/{ds}/{ds}-i_{n_iterations}-lr_a,c_{lr_actor},{lr_critic}-g_{gamma}-replace_target_{replace_target}-singlelayer-uepisodic-policy_dqn-hnodes_{hnodes}-max_T_{t_steps}-eps_start_{epsilon}-eps_end_{eps_end}-max_mem_{max_mem_size}-batchsize_{batch_size}-seed_{seed}-results"
+    fpath=f"./Results/{ds}/{ds}-i_{n_iterations}-lr_{lr}-g_{gamma}-replace_target_{replace_target}-singlelayer-uepisodic-hnodes_{hnodes}-length_{t_steps}-eps_start_{epsilon}-eps_end_{eps_end}-max_mem_{max_mem_size}-batchsize_{batch_size}-seed_{seed}-results"
     pickle_data(results,fpath)
     
     #Save the model
-    checkpoint_path=f"./Results/{ds}/{ds}-i_{n_iterations}-lr_a,c_{lr_actor},{lr_critic}-g_{gamma}-replace_target_{replace_target}-singlelayer-uepisodic-policy_dqn-hnodes_{hnodes}-max_T_{t_steps}-eps_start_{epsilon}-eps_end_{eps_end}-max_mem_{max_mem_size}-batchsize_{batch_size}-seed_{seed}-weights"
+    checkpoint_path=f"./Results/{ds}/{ds}-i_{n_iterations}-lr_{lr}-g_{gamma}-replace_target_{replace_target}-singlelayer-uepisodic-hnodes_{hnodes}-length_{t_steps}-eps_start_{epsilon}-eps_end_{eps_end}-max_mem_{max_mem_size}-batchsize_{batch_size}-seed_{seed}-model"
     torch.save(agent.Q_eval.state_dict(), checkpoint_path)
 
     #View and save plots

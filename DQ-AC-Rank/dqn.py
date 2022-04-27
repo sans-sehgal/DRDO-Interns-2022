@@ -5,28 +5,23 @@ from torch.distributions import Categorical
 import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
-
+import random
 class DeepQNetwork(nn.Module):
     """Deep Q Network"""
-    def __init__(self, lr_critic, input_dims, fc1_dims, fc2_dims, 
-            n_actions):
+    def __init__(self, lr_critic, input_dims,n_actions):
         super(DeepQNetwork, self).__init__()
         self.input_dims = input_dims
-        self.fc1_dims = fc1_dims
-        self.fc2_dims = fc2_dims
         self.n_actions = n_actions
 
         #Define the network
-        self.net= nn.Sequential(nn.Linear(*self.input_dims, self.fc1_dims),
-                        nn.ReLU(),
-                        #nn.Linear(self.fc1_dims, self.fc2_dims),
-                        #nn.ReLU(),
-                        nn.Linear(self.fc1_dims, self.n_actions))
+        self.net= nn.Sequential(nn.Linear(*self.input_dims, self.n_actions))
+        
         #Define the optimizer
         self.optimizer_critic = optim.Adam(self.parameters(), lr=lr_critic)
         self.loss = nn.MSELoss()
         self.device = T.device('cpu')
         self.to(self.device)
+        nn.init.constant_(self.net[0].weight,1)
 
     def forward(self, state):
         actions=self.net(state)
@@ -34,22 +29,17 @@ class DeepQNetwork(nn.Module):
 
 class ActorNetwork(nn.Module):
     """Actor network"""
-    def __init__(self, lr_actor,input_dims, hnodes,n_actions):
+    def __init__(self, lr_actor,input_dims,n_actions):
         super(ActorNetwork, self).__init__()
 
         #Define the network
-        self.actor = nn.Sequential(
-                        nn.Linear(*input_dims, hnodes),
-                        nn.ReLU(),
-                        # nn.Linear(hnodes, hnodes),
-                        # nn.Tanh(),
-                        nn.Linear(hnodes, n_actions),
-                        nn.Softmax(dim=0)
-                    )
+        self.actor = nn.Sequential(nn.Linear(*input_dims, n_actions),nn.Softmax(dim=0))
+        
         #Define the optimizer
         self.optimizer_actor = optim.Adam(self.parameters(), lr=lr_actor)
         self.device = T.device('cpu')
         self.to(self.device)
+        nn.init.constant_(self.actor[0].weight,1)
 
     def forward(self, state):
         actions=self.actor(state)
@@ -74,14 +64,14 @@ class Agent():
         self.replace_target = replace_target
         self.hnodes=hnodes
 
+        #self.lr_critic = 0.01
+
         #Initialize the Evaluation and target networks
-        self.Q_eval = DeepQNetwork(lr_critic, n_actions=n_actions, input_dims=input_dims,
-                                    fc1_dims=hnodes, fc2_dims=hnodes)
-        self.Q_next = DeepQNetwork(lr_critic, n_actions=n_actions, input_dims=input_dims,
-                                    fc1_dims=hnodes, fc2_dims=hnodes)
+        self.Q_eval = DeepQNetwork(lr_critic, n_actions=n_actions, input_dims=input_dims)
+        self.Q_next = DeepQNetwork(lr_critic, n_actions=n_actions, input_dims=input_dims)
 
         #Initialize the Actor Network
-        self.Actor = ActorNetwork(lr_actor=lr_actor, input_dims=input_dims, n_actions=n_actions, hnodes=hnodes) 
+        self.Actor = ActorNetwork(lr_actor=lr_actor, input_dims=input_dims, n_actions=n_actions) 
 
         #Initialize the buffers
         self.state_memory = [0]*self.mem_size
@@ -103,12 +93,24 @@ class Agent():
 
     def choose_action_dqn(self, observation):
         """Perform episilon greedy selection of action to take(policy in dqn)."""
+        '''
         if np.random.random() > self.epsilon:
             state = observation.float().to(self.Q_eval.device)
             actions = self.Q_eval.forward(state)
             action = T.argmax(actions).item()
         else:
             action = np.random.choice(len(observation))
+
+        return action
+        '''
+        state = observation.float().to(self.Q_eval.device)
+        actions = self.Q_eval.forward(state)
+            #action=actions
+        if np.random.random() > self.epsilon:  
+            action=rankdata(actions.detach().numpy(),method='ordinal')
+
+        else:
+            action = random.sample(range(1,len(actions)+1),len(actions))
 
         return action
 
@@ -223,7 +225,8 @@ class Agent():
         #Compute the critic loss
         loss_critic = self.Q_eval.loss(q_target, q_eval).to(self.Q_eval.device)
         #ret_loss=loss_critic.detach().item()
-
+        for name,param in self.Q_eval.named_parameters():
+            print(name,param.data)
         #Clear any gradients
         self.Q_eval.optimizer_critic.zero_grad()
         self.Actor.optimizer_actor.zero_grad()
@@ -234,7 +237,9 @@ class Agent():
 
         #Compute the actor loss
         loss_actor = (-log_probs*self.qvals_minibatch(state_batch,action_batch).detach()).mean().to(self.Actor.device)
-
+        print('------AFTER------')
+        for name,param in self.Q_eval.named_parameters():
+            print(name,param.data)
         #Update actor parameters by SGD and backprop
         loss_actor.backward()
         self.Actor.optimizer_actor.step()

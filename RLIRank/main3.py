@@ -9,10 +9,8 @@ import torch
 import pickle
 import argparse
 import random
-import scipy 
-import numpy as np 
 from visualizer import visualize_test, visualize_train, visualize_rewards
-
+import random
 np.random.seed(4)
 random.seed(4)
 torch.manual_seed(4)
@@ -21,28 +19,9 @@ torch.manual_seed(4)
 '''
 Q-> current qurey
 action_list -> list of documets
-action_list2 ->feature vectors of the docs in action_list & query 
-data -> dataset (refer to LoadData for format) 
+action_list2 ->feature vectors of the docs in action_list
+data -> dataset (refer to LoadData for format)
 '''
-
-'''
-Returns a list of similarity scores with the vector received from user feedback
-similarity_score[] -> list of similarity scores
-'''
-def similarity_score(action_list2, data_vec):
-    similarity_score = []
-    for action in action_list2:
-        # print(action)
-        action = action[:46]
-        try:
-            cos_distance = scipy.spatial.distance.cosine(data_vec, action)
-            cos_similarity = 1 - cos_distance
-            similarity_score.append(cos_similarity)
-        except:
-        #     print("skipped")
-            continue
-    return similarity_score
-
 def feedback(Q,action_list,action_list2,data,iter):
     for i,j in enumerate(action_list):
         print(i,'\t',j)
@@ -50,35 +29,34 @@ def feedback(Q,action_list,action_list2,data,iter):
     val = input("Enter Feedback \n")
     f = [0]*len(action_list)
     
-    #positive=np.zeros(46,dtype=float)
-    #negative=np.zeros(46,dtype=float)
+    positive=np.zeros(46,dtype=float)
+    negative=np.zeros(46,dtype=float)
+
     for i in val.split():
         f[int(i)]=1
         #print(Q,action_list[int(i)])
-        similarity_list = similarity_score(action_list2,action_list2[int(i)])
-        for s in range(len(action_list)):
-            data.updateRelevance(Q,action_list[int(s)],similarity_list[int(s)])
+        data.updateRelevance(Q,action_list[int(i)])
 
-    print(data.QUERY_DOC_TRUTH[Q])
-    #print(similarity_list)
+    #print(data.QUERY_DOC_TRUTH[Q])
+    data.updateRelevance(Q,action_list[int(i)])
     #print(data.MAX_DCG[Q])
     data.updateIDCG(Q)
     #print(data.MAX_DCG[Q])
 
-    #for i in f:
-    #    if i:
-    #        positive = positive + np.array(action_list2[i][0][:46], dtype=float)
-    #    else:
-    #        negative = negative + np.array(action_list2[i][0][:46], dtype=float)
+    for i in f:
+        if i:
+            positive = positive + np.array(action_list2[i][0][:46], dtype=float)
+        else:
+            negative = negative + np.array(action_list2[i][0][:46], dtype=float)
     
-    #n = len(val.split())
-    #positive = positive/n
-    #negative = negative/(max(0,len(action_list)-n))
+    n = len(val.split())
+    positive = positive/n
+    negative = negative/(max(0,len(action_list)-n))
     #query=(1-gamma*(b-c))*query + gamma*(b*positive-c*negative)
-    #query = action_list2[0][0][46:]
-    #query = (1-(0.9**iter)*0.5)*query + (0.9**iter)*(0.75*positive-0.25*negative)
+    query = action_list2[0][0][46:]
+    query = (1-(0.9**iter)*0.5)*query + (0.9**iter)*(0.75*positive-0.25*negative)
     #print(query)
-    #return query
+    return query
 
 
 
@@ -102,7 +80,7 @@ def train(model, data, episode_length,epoch):
         for iter in range(5):
             dcg_results[Q] = []
 
-            #qvec = data.getQVEC(Q)
+            qvec = data.getQVEC(Q)
             # Initialize state with Total number of documents
             state = data.getDocQuery()[Q]
             action_list = []
@@ -118,17 +96,19 @@ def train(model, data, episode_length,epoch):
                 observation = [data.getFeatures()[x] for x in state]
                 observation = np.array(observation, dtype=float)
 
-                #qvec_temp = np.array(qvec).reshape(1,46)
+                qvec_temp = np.array(qvec).reshape(1,46)
                 
-                #observation = np.concatenate([observation,np.repeat(qvec_temp,observation.shape[0],axis=0)],axis=1)
+                observation = np.concatenate([observation,np.repeat(qvec_temp,observation.shape[0],axis=0)],axis=1)
 
                 # Actor chooses an action (a document at t position)
                 action = model.choose_action(observation,action_list2)
-                
+                #print(action)
                 # all actions stored in buffer for calculation of DCG scores later
                 action_list.append(state[action])
-                #action_list2.append(np.concatenate([np.array(data.getFeatures()[state[action]], dtype=float).reshape(1,46),qvec_temp ],axis=1))
-                action_list2.append(np.array(data.getFeatures()[state[action]], dtype=float).reshape(1,46))
+                action_list2.append(np.concatenate([np.array(data.getFeatures()[state[action]], dtype=float).reshape(1,46),qvec_temp ],axis=1))
+                #print(action_list2)
+
+                #action_list3.append(data.getFeatures()[state[action]])
                 
 
                 # Get the next state and the reward based on the action
@@ -139,8 +119,8 @@ def train(model, data, episode_length,epoch):
                 observation_ = [data.getFeatures()[x] for x in state_]
                 observation_ = np.array(observation_, dtype=float)
 
-                #if observation_.shape[0] != 0:
-                #    observation_ = np.concatenate([observation_,np.repeat(qvec_temp,observation_.shape[0],axis=0)],axis=1)
+                if observation_.shape[0] != 0:
+                    observation_ = np.concatenate([observation_,np.repeat(qvec_temp,observation_.shape[0],axis=0)],axis=1)
 
                 # Update agent parameters
                 model.update(observation, reward, observation_, action_list2)
@@ -151,9 +131,12 @@ def train(model, data, episode_length,epoch):
             epoch_avg_step_reward += episode_reward / effective_length
             episode_rewards_list.append(episode_reward / effective_length)
             
-            # if epoch==0:
-            feedback(Q,action_list,action_list2,data,iter)
-            #data.updateQVEC(Q,updatedQuery)
+            #if epoch==0:
+            updatedQuery = feedback(Q,action_list,action_list2,data,iter)
+            print('-----------UPDATED QUERY----------')
+            print(updatedQuery)
+
+            data.updateQVEC(Q,updatedQuery)
              
             
             # Update Query DCG results:
@@ -173,7 +156,7 @@ def train(model, data, episode_length,epoch):
 
     return final_result, episode_rewards_list
 
-'''
+
 def init_train(model, data):
 
     # Setting pytorch to evaluation mode (stops updating the gradients)
@@ -243,7 +226,7 @@ def init_train(model, data):
           f"NDCG@3: {final_result[2]}\tNDCG@5: {final_result[4]}\tNDCG@10: {final_result[9]}")
 
     return final_result, episode_rewards_list
-'''
+
 
 def test(model, data):
     
@@ -260,21 +243,21 @@ def test(model, data):
         state = data.getDocQuery()[Q]
         action_list = []
         action_list2=[]
-        #qvec = data.getQVEC(Q)
+        qvec = data.getQVEC(Q)
         Q_reward = 0
         for t in range(0, len(state)):
             observation = [data.getFeatures()[x] for x in state]
             observation = np.array(observation, dtype=float)
-            #qvec_temp = np.array(qvec).reshape(1,46)
-            #observation = np.concatenate([observation,np.repeat(qvec_temp,observation.shape[0],axis=0)],axis=1)
+            qvec_temp = np.array(qvec).reshape(1,46)
+            observation = np.concatenate([observation,np.repeat(qvec_temp,observation.shape[0],axis=0)],axis=1)
 
 
 
             # Note: Actor takes action and returns index of the state
             action = model.choose_action_test(observation,action_list2)
             action_list.append(state[action])
-            action_list2.append(np.array(data.getFeatures()[state[action]], dtype=float).reshape(1,46))
-            #action_list2.append(np.concatenate([np.array(data.getFeatures()[state[action]], dtype=float).reshape(1,46),qvec_temp ],axis=1))
+            #action_list2.append(data.getFeatures()[state[action]])
+            action_list2.append(np.concatenate([np.array(data.getFeatures()[state[action]], dtype=float).reshape(1,46),qvec_temp ],axis=1))
 
             # Update to next state and get reward
             state_, reward = update_state(t, Q, state[action], state, data.getTruth())
