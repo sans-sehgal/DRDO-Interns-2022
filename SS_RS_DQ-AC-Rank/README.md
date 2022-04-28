@@ -20,8 +20,8 @@ To run the algorithm, enter the following code:<br>
 
 <br>Example: 
 ---
-1. Running on default hyperparameters for 70-30 split and 50 epochs (MQ2008): <br> `$ python main.py -d ./data/MQ2008/all_dic_0,1,2 -e 20 -nf 2`
-2. Running with given hyperparameters: <br> `$ python main.py -d ./Data/MQ2008/all_dic_0,1,2 -e 50 -nf 46 -g 1 -lr_actor 0.0001 -lr_critic 0.0002 -batch_size 128`
+1. Running on default hyperparameters for 70-30 split and 50 epochs (MQ2008): <br> `$ python main.py -d ./data/MQ2008/all_0,1,2 -e 20 -nf 2`
+2. Running with given hyperparameters: <br> `$ python main.py -d ./Data/MQ2008/all_0,1,2 -e 50 -nf 46 -g 1 -lr_actor 0.0001 -lr_critic 0.0002 -batch_size 128`
 
 
 
