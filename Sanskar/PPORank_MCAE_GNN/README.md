@@ -10,7 +10,7 @@ python train.py -d data_directory -nf num_features -i num_iterations -g gamma -l
 ```
 <br>
 <br>Default hyperparameters:<br> 
----
+---<br>
 1. Data(-d): `Required` <br>
 2. Number of features(-nf): `Required` <br>
 3. Number of iterations(-i): `Required` <br>
