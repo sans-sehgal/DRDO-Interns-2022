@@ -126,7 +126,7 @@ def get_name(datadir):
             ds='MQ2008'
         elif('mq2007' in i.lower()):
             ds='MQ2007'
-        elif('mq_cora_embeddings' in i.lower()):
+        elif('cora_embeddings' in i.lower()):
             ds = 'CORA'
     if(len(ds)==0):
         print("Wrong Dataset,Please check path")

@@ -104,10 +104,7 @@ def generate_dataset(prev_shape):
                 node_seq.add(edge[0])
                 node_seq.add(edge[1])
                 edge_seq.add(edge)
-        # array = get_embeddings(node_seq, edge_seq , 46)
-        # print(array.shape)
-        # if array.shape[0] > prev_shape:
-        if len(node_seq) > prev_shape:
+        if len(node_seq) > prev_shape + 5:
             array = get_embeddings(node_seq, edge_seq , 46)
             print(array.shape)
             for i in node_seq:
