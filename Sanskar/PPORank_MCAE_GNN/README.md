@@ -9,7 +9,7 @@ python train.py -d data_directory -nf num_features -i num_iterations -g gamma -l
 -steps max_episode_length -update_T update_after_T -epochs num_epochs -clip policy_clip -save save_frequency -seed seed 
 ```
 <br>
-<br>Default hyperparameters: 
+<br>Default hyperparameters:<br> 
 ---
 1. Data(-d): `Required` <br>
 2. Number of features(-nf): `Required` <br>
