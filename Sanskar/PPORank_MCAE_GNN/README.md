@@ -11,19 +11,19 @@ python train.py -d data_directory -nf num_features -i num_iterations -g gamma -l
 <br>
 <br>Default hyperparameters: 
 ---
-1. Data(-d): `Required`
-2. Number of features(-nf): `Required`
-3. Number of iterations(-i): `Required`
-4. Gamma(-g): `0.99`
-5. Learning rate actor(-lr_actor): `0.0003`
-6. Learning rate critic (-lr_critic): `0.001`
-7. Hidden layer Nodes(-hnodes): `64`
-8. Episode Length(-steps): `50`
-9. Update Timestep(-update_T): `200`
-10. Epochs(-epochs): `3`
-11. Policy clip (-clip): `0.2`
-12. Save timestep(-save): `50000`
-13. seed(-seed):`7`
+1. Data(-d): `Required` <br>
+2. Number of features(-nf): `Required` <br>
+3. Number of iterations(-i): `Required` <br>
+4. Gamma(-g): `0.99` <br>
+5. Learning rate actor(-lr_actor): `0.0003` <br>
+6. Learning rate critic (-lr_critic): `0.001` <br>
+7. Hidden layer Nodes(-hnodes): `64` <br>
+8. Episode Length(-steps): `50` <br>
+9. Update Timestep(-update_T): `200` <br>
+10. Epochs(-epochs): `3` <br>
+11. Policy clip (-clip): `0.2` <br>
+12. Save timestep(-save): `50000` <br>
+13. seed(-seed):`7` <br>
 
 
 <br>Example: 
