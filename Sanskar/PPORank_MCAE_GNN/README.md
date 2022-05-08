@@ -28,7 +28,8 @@ python train.py -d data_directory -nf num_features -i num_iterations -g gamma -l
 
 <br>Example: 
 ---
-1. Running with given hyperparameters: <br> ``` python train.py -d ../data/MQ2008_All_DIC_0,1,2 -i 50 -nf 46 -g 0.98 -lr_actor 0.005 -lr_critic 0.006 -hnodes 45 -steps 30 -update_T 100 -epochs 3 -clip 0.3 -hnodes 32 -save 10000 -seed 3```
+1. Running with given hyperparameters: <br> 
+``` python train.py -d ../data/MQ2008_All_DIC_0,1,2 -i 50 -nf 46 -g 0.98 -lr_actor 0.005 -lr_critic 0.006 -hnodes 45 -steps 30 -update_T 100 -epochs 3 -clip 0.3 -hnodes 32 -save 10000 -seed 3```
 
 
 
