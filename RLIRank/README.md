@@ -6,12 +6,12 @@
 ---
 
 To run the algorithm, enter the following code:<br>
-`$ python main3.py -d data_directory -nf no_features -e no_epochs -g gamma -lr_actor actor_lr -lr_critic critic_lr -episode_length episode_length -seed seed `<br>
+`$ python main3.py -d data_directory -nf no_features -e no_epochs -g gamma -alpha actor_lr -beta critic_lr -seed seed `<br>
 
 
 <br>Example: 
 ---
-1. Running on given hyperparameters: <br> `$ python main3.py -d ./data/MQ2008/all_0,1,2 -nf 46 -lr_actor 0.001 -lr_critic 0.002 -g 1 -e 50`
+1. Running on given hyperparameters: <br> `$ python main3.py -d ./data/MQ2008/all_0,1,2 -nf 46 -alpha 0.001 -beta 0.002 -g 1 -e 50`
 ---
 
 
