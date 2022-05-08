@@ -90,9 +90,9 @@ def import_all(filename):
 #     return nodes , edges
 # prev_shape = 0
 def generate_dataset(prev_shape):
-    with open('/media/sanskar/Seagate Expansion Drive/DRDO/PPORank_MCAE/cora_nodes.p', 'rb') as f:
+    with open('cora_nodes.p', 'rb') as f:
         nodes = pickle.load(f)
-    with open('/media/sanskar/Seagate Expansion Drive/DRDO/PPORank_MCAE/cora_edges.p', 'rb') as f:
+    with open('cora_edges.p', 'rb') as f:
         edges = pickle.load(f)
     node_seq = set()
     edge_seq = set()
