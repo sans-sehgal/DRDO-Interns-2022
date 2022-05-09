@@ -25,7 +25,12 @@ python train.py -d data_directory -nf num_features -i num_iterations -g gamma -l
 12. Save timestep(-save): `50000` <br>
 13. seed(-seed):`7` <br>
 
-
+<br> Requirements:
+```
+pip install gym
+pip install networkx
+pip install node2vec
+```
 <br>Example: 
 ---
 1. Running with given hyperparameters: <br> 
