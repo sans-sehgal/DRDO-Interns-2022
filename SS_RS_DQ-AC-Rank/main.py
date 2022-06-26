@@ -36,7 +36,7 @@ def feedback(Q,action_list,data):
         f[int(i)]=1
         data.updateRelevance(Q,action_list[int(i)],int(i)+1)        
 
-    data.updateIDCG(Q)
+    #data.updateIDCG(Q)
     return int(val)+1
 
 
@@ -163,7 +163,7 @@ def test(model, data):
         action_list = []
         effective_length=len(state)
         print('NEW QUERY \n')
-        for i in range(1):
+        for i in range(3):
 
             observation = torch.FloatTensor(np.array(state,dtype=float))
             action = agent.choose_action_test_actor(observation)
@@ -175,8 +175,11 @@ def test(model, data):
             action_list=docs
             #pos = feedback(Q,docs,data)
             pos=random.randint(1,len(state))
+            
 
             reward=1/(pos)
+            #reward = validate_individual(data.getTruth()[Q], data.getIDCG()[Q], action_list)
+            
             ep_reward+=reward
             rs=data.getRelevance(Q,docs)
 
@@ -331,7 +334,8 @@ if __name__ == '__main__':
             action_list = []
             effective_length=min(t_steps,len(state))
             print('NEW QUERY \n')
-            for i in range(repeat):
+            repeat=4
+            for j in range(repeat):
 
                 observation = torch.FloatTensor(np.array(state,dtype=float))
                 action = agent.choose_action_dqn(observation)
@@ -343,10 +347,15 @@ if __name__ == '__main__':
                 docs.reverse()
                 action_list=docs
                 #print(docs)
-                pos = feedback(Q,docs,data)
+                #if(i>3):
+                #    pos = feedback(Q,docs,data)
                 #pos=random.randint(1,len(state))
+                pos = feedback(Q,docs,data)
+                #pos=1
 
-                reward=1/(pos)
+                #reward=1/(pos)
+                reward = validate_individual(data.getTruth()[Q], data.getIDCG()[Q], action_list)[0]
+                
                 ep_reward+=reward
                 rs=data.getRelevance(Q,docs)
 

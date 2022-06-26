@@ -15,14 +15,16 @@ class DeepQNetwork(nn.Module):
         self.n_actions = n_actions
 
         #Define the network
-        self.net= nn.Sequential(nn.Linear(*self.input_dims, self.n_actions))
-        
+        self.net= nn.Sequential(nn.Linear(*self.input_dims, 2),
+                                nn.Linear(2, self.n_actions))
+        #self.net= nn.Sequential(nn.Linear(2, 1))
         #Define the optimizer
         self.optimizer_critic = optim.Adam(self.parameters(), lr=lr_critic)
         self.loss = nn.MSELoss()
         self.device = T.device('cpu')
         self.to(self.device)
         nn.init.constant_(self.net[0].weight,1)
+        nn.init.constant_(self.net[1].weight,1)
 
     def forward(self, state):
         actions=self.net(state)
@@ -34,13 +36,17 @@ class ActorNetwork(nn.Module):
         super(ActorNetwork, self).__init__()
 
         #Define the network
-        self.actor = nn.Sequential(nn.Linear(*input_dims, n_actions),nn.Softmax(dim=0))
-        
+        self.actor = nn.Sequential(nn.Linear(*input_dims, 2),
+                                   nn.Linear(2, n_actions),
+                                   nn.Softmax(dim=0))
+        #self.actor = nn.Sequential(nn.Linear(2, 1),
+        #                           nn.Softmax(dim=0))
         #Define the optimizer
         self.optimizer_actor = optim.Adam(self.parameters(), lr=lr_actor)
         self.device = T.device('cpu')
         self.to(self.device)
         nn.init.constant_(self.actor[0].weight,1)
+        nn.init.constant_(self.actor[1].weight,1)
 
     def forward(self, state):
         actions=self.actor(state)
