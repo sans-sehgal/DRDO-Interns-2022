@@ -16,7 +16,7 @@ The algorithm was tested on the benchmark LETOR Datasets <br>
 
 ### Algorithm
 ---
-
+![Flowchart](https://github.com/sans-sehgal/DRDO-Interns-2022/blob/main/SS_RS_DQ-AC-Rank/Flowchart.jpg)
 
 ### Default hyperparameters: 
 ---
